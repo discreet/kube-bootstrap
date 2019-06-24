@@ -35,6 +35,12 @@ command. If `kubectx` is not alredy installed it will be installed via
 `homebrew` along with `fzf` for fuzzy matching on cluster contexts. You can
 learn more about `kubectx` from their [GitHub page](https://github.com/ahmetb/kubectx).
 
+### Build
+
+Since `kube-bootstrap` is still in development and changing rapidly the best way
+to use the tool right now is to clone the repository and execute `go run
+main.go`.
+
 ### TODO
 
 - [ ] Generate `kube.config`

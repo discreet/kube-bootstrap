@@ -1,64 +1,74 @@
 package helm
 
 import (
+	"archive/tar"
 	"bytes"
+	"compress/gzip"
 	"fmt"
-	"log"
+	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"regexp"
 	"strings"
-
-	"github.com/cavaliercoder/grab"
 )
 
-func Install(version string) {
+func Install(version string) (bool, error) {
 	helmURL := fmt.Sprintf(
 		"https://get.helm.sh/helm-%s-darwin-amd64.tar.gz",
 		version,
 	)
 
-	resp, err := grab.Get("/tmp", helmURL)
+	resp, err := http.DefaultClient.Get(helmURL)
 
 	if err != nil {
-		log.Fatalf("helm download failed with:\n%s\n", err)
+		return false, err
 	}
-}
+	defer resp.Body.Close()
 
-func moveHelm() {
-	currLocation := "/tmp/darwin-amd64/helm"
-	newLocation := "/usr/local/bin/helm"
-
-	err := os.Rename(currLocation, newLocation)
-
+	ret, err := extractHelm(resp.Body)
 	if err != nil {
-		log.Fatal("Failed to move", currLocation, "to", newLocation)
+		return false, err
 	}
-	setPerms()
+	return ret, nil
 }
 
-func setPerms() {
-	helm := "/usr/local/bin/helm"
-
-	err := os.Chmod(helm, 0755)
-
+func extractHelm(archive io.Reader) (bool, error) {
+	archive, err := gzip.NewReader(archive)
 	if err != nil {
-		log.Fatal("Failed to make", helm, "executable")
+		return false, err
 	}
-	cleanupHelm()
+
+	r := regexp.MustCompile(`^darwin-amd64\/helm$`)
+	tr := tar.NewReader(archive)
+	for {
+		hdr, err := tr.Next()
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			return false, err
+		}
+
+		if r.MatchString(hdr.Name) {
+			continue
+		}
+
+		f, err := os.OpenFile("/usr/local/bin/helm", os.O_RDWR|os.O_CREATE, 0755)
+		if err != nil {
+			return false, err
+		}
+
+		if _, err := io.Copy(f, tr); err != nil {
+			return false, err
+		}
+		break
+	}
+	return true, nil
 }
 
-func cleanupHelm() {
-	helmDir := "/tmp/darwin-amd64"
-
-	err := os.RemoveAll(helmDir)
-
-	if err != nil {
-		log.Fatal("Failed to cleanup helm artifacts.")
-	}
-}
-
-func Version() string {
+func Version() (string, error) {
 	currVersion := exec.Command(
 		"/bin/bash",
 		"-c",
@@ -68,11 +78,10 @@ func Version() string {
 	buf := new(bytes.Buffer)
 	currVersion.Stdout = buf
 	err := currVersion.Run()
-
 	if err != nil {
-		log.Fatalf("Failed to get current helm version:\n%s\n", err)
+		return "", err
 	}
 
 	r := regexp.MustCompile(`^v\d{1,2}.\d{1,2}.{1,2}`)
-	return r.FindString(strings.TrimSpace(buf.String()))
+	return r.FindString(strings.TrimSpace(buf.String())), nil
 }

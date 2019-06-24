@@ -1,16 +1,15 @@
 package kubectx
 
 import (
-	"log"
 	"os"
 	"os/exec"
 )
 
-func Install() {
+func Install() (bool, error) {
 	kubectx := exec.Command(
 		"/bin/bash",
 		"-c",
-		"brew install kubectx fzf",
+		"brew install kubectx",
 	)
 
 	kubectx.Stdout = os.Stdout
@@ -18,6 +17,26 @@ func Install() {
 	err := kubectx.Run()
 
 	if err != nil {
-		log.Fatalf("Brew install of kubectx failed with:\n%s\n", err)
+		return false, err
 	}
+
+	return true, nil
+}
+
+func Fzf() (bool, error) {
+	fzf := exec.Command(
+		"/bin/bash",
+		"-c",
+		"brew install fzf",
+	)
+
+	fzf.Stdout = os.Stdout
+	fzf.Stderr = os.Stderr
+	err := fzf.Run()
+
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }

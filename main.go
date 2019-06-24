@@ -22,7 +22,10 @@ func main() {
 		resp := brew.Prompt()
 		switch resp {
 		case "yes":
-			brew.Install()
+			if _, err := brew.Install(); err != nil {
+				log.Fatal(err)
+			}
+			log.Println("Homebrew has been installed")
 		case "no":
 			log.Fatal("We cannot proceed without Homebrew. You are on your own.")
 		default:
@@ -32,13 +35,21 @@ func main() {
 
 	if !(checks.App("kubectl")) {
 		log.Println("Installing kubectl", kubectlVersion)
-		kubectl.Install(kubectlVersion)
+		if _, err := kubectl.Install(kubectlVersion); err != nil {
+			log.Fatal(err)
+		}
+		log.Println("kubectl", kubectlVersion, "Installed")
 	} else {
-		currVersion := kubectl.Version()
+		currVersion, err := kubectl.Version()
+		if err != nil {
+			log.Fatal(err)
+		}
 		if checks.Version(currVersion, kubectlVersion) {
 			log.Println("kubectl version", currVersion, "is supported")
 		} else {
-			kubectl.Install(kubectlVersion)
+			if _, err := kubectl.Install(kubectlVersion); err != nil {
+				log.Fatal(err)
+			}
 			if checks.Version(currVersion, kubectlVersion) {
 				log.Println("kubectl is now at a supported version:", kubectlVersion)
 			} else {
@@ -49,13 +60,21 @@ func main() {
 
 	if !(checks.App("helm")) {
 		log.Println("Installing helm", helmVersion)
-		helm.Install(helmVersion)
+		if _, err := helm.Install(helmVersion); err != nil {
+			log.Fatal(err)
+		}
+		log.Println("helm", helmVersion, "installed")
 	} else {
-		currVersion := helm.Version()
+		currVersion, err := helm.Version()
+		if err != nil {
+			log.Fatal(err)
+		}
 		if checks.Version(currVersion, helmVersion) {
 			log.Println("helm version", currVersion, "is supported")
 		} else {
-			helm.Install(helmVersion)
+			if _, err := helm.Install(helmVersion); err != nil {
+				log.Fatal(err)
+			}
 			if checks.Version(currVersion, helmVersion) {
 				log.Println("helm is now at a supported version:", helmVersion)
 			} else {
@@ -64,8 +83,21 @@ func main() {
 		}
 	}
 
-	if !(checks.App("kubectx") || checks.App("fzf")) {
-		log.Println("Installing kubectx and fzf")
-		kubectx.Install()
+	if !checks.App("kubectx") {
+		log.Println("Installing kubectx")
+		_, err := kubectx.Install()
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Println("kubectx installed")
+	}
+
+	if !checks.App("fzf") {
+		log.Println("Installing fzf")
+		_, err := kubectx.Fzf()
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Println("fzf installed")
 	}
 }

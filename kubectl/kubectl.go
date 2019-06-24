@@ -3,61 +3,50 @@ package kubectl
 import (
 	"bytes"
 	"fmt"
-	"log"
+	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"strings"
-
-	"github.com/cavaliercoder/grab"
 )
 
-func Install(version string) {
+func Install(version string) (bool, error) {
 	kubectlURL := fmt.Sprintf(
 		"https://storage.googleapis.com/kubernetes-release/release/%s/bin/darwin/amd4/kubectl",
 		version,
 	)
 
-	resp, err := grab.Get("/tmp", kubectlURL)
+	resp, err := http.DefaultClient.Get(kubectlURL)
 
 	if err != nil {
-		log.Fatalf("kubectl download failed with:\n%s\n", err)
+		return false, err
 	}
-	setPerms(resp.Filename)
-	moveKubectl(resp.Filename)
-}
+	defer resp.Body.Close()
 
-func setPerms(file string) {
-	kubectl := file
-
-	err := os.Chmod(kubectl, 0755)
+	f, err := os.OpenFile("/usr/local/bin/kubectl", os.O_RDWR|os.O_CREATE, 0755)
 
 	if err != nil {
-		log.Fatal("Failed to make", kubectl, "executable")
+		return false, err
 	}
+
+	if _, err := io.Copy(f, resp.Body); err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
 
-func moveKubectl(file string) {
-	currLocation := file
-	newLocation := "/usr/local/bin/kubectl"
-
-	err := os.Rename(currLocation, newLocation)
-
-	if err != nil {
-		log.Fatal("Failed to move", currLocation, "to", newLocation)
-	}
-}
-
-func Version() string {
+func Version() (string, error) {
 	currVersion := exec.Command(
 		"/bin/bash",
 		"-c",
-		"kubectl version --client=true --short | awk '{print $3}'",
+		"kubectl version --client=true --short | awk '{prbool $3}'",
 	)
 	buf := new(bytes.Buffer)
 	currVersion.Stdout = buf
 	err := currVersion.Run()
 	if err != nil {
-		log.Fatalf("Failed to get current kubectl version:\n%s\n", err)
+		return "", err
 	}
-	return strings.TrimSpace(buf.String())
+	return strings.TrimSpace(buf.String()), nil
 }

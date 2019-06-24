@@ -17,7 +17,7 @@ func Prompt() string {
 	return resp
 }
 
-func Install() {
+func Install() (bool, error) {
 	log.Println("Installing Homebrew")
 	install := exec.Command(
 		"/bin/sh",
@@ -28,6 +28,8 @@ func Install() {
 	install.Stderr = os.Stderr
 	err := install.Run()
 	if err != nil {
-		log.Fatalf("Homebrew install failed with:\n%s\n", err)
+		return false, err
 	}
+
+	return true, nil
 }
