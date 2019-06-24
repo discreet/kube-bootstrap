@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
 	"regexp"
 	"strings"
 
-	"github.com/hashicorp/go-getter"
+	"github.com/cavaliercoder/grab"
 )
 
 func Install(version string) {
@@ -17,45 +18,40 @@ func Install(version string) {
 		version,
 	)
 
-	err := getter.GetAny("/tmp", helmURL)
+	resp, err := grab.Get("/tmp", helmURL)
 
 	if err != nil {
 		log.Fatalf("helm download failed with:\n%s\n", err)
 	}
-	moveHelm()
 }
 
 func moveHelm() {
-	moveCMD := fmt.Sprintf(
-		"mv /tmp/darwin-amd64/helm /usr/local/bin",
-	)
+	currLocation := "/tmp/darwin-amd64/helm"
+	newLocation := "/usr/local/bin/helm"
 
-	install := exec.Command(
-		"/bin/sh",
-		"-c",
-		moveCMD,
-	)
-
-	err := install.Run()
+	err := os.Rename(currLocation, newLocation)
 
 	if err != nil {
-		log.Fatal("Failed to move helm to /usr/local/bin")
+		log.Fatal("Failed to move", currLocation, "to", newLocation)
+	}
+	setPerms()
+}
+
+func setPerms() {
+	helm := "/usr/local/bin/helm"
+
+	err := os.Chmod(helm, 0755)
+
+	if err != nil {
+		log.Fatal("Failed to make", helm, "executable")
 	}
 	cleanupHelm()
 }
 
 func cleanupHelm() {
-	cleanupCMD := fmt.Sprintf(
-		"rm -rf /tmp/darwin-amd64",
-	)
+	helmDir := "/tmp/darwin-amd64"
 
-	cleanup := exec.Command(
-		"/bin/bash",
-		"-c",
-		cleanupCMD,
-	)
-
-	err := cleanup.Run()
+	err := os.RemoveAll(helmDir)
 
 	if err != nil {
 		log.Fatal("Failed to cleanup helm artifacts.")

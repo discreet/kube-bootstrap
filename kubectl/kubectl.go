@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
 	"strings"
 
-	"github.com/hashicorp/go-getter"
+	"github.com/cavaliercoder/grab"
 )
 
 func Install(version string) {
@@ -16,29 +17,33 @@ func Install(version string) {
 		version,
 	)
 
-	err := getter.GetAny("/tmp", kubectlURL)
+	resp, err := grab.Get("/tmp", kubectlURL)
 
 	if err != nil {
 		log.Fatalf("kubectl download failed with:\n%s\n", err)
 	}
-	moveKubectl()
+	setPerms(resp.Filename)
+	moveKubectl(resp.Filename)
 }
 
-func moveKubectl() {
-	moveCMD := fmt.Sprintf(
-		"chmod 755 /tmp/kubectl && mv /tmp/kubectl /usr/local/bin",
-	)
+func setPerms(file string) {
+	kubectl := file
 
-	install := exec.Command(
-		"/bin/sh",
-		"-c",
-		moveCMD,
-	)
-
-	err := install.Run()
+	err := os.Chmod(kubectl, 0755)
 
 	if err != nil {
-		log.Fatal("Failed to move kubectl to /usr/local/bin")
+		log.Fatal("Failed to make", kubectl, "executable")
+	}
+}
+
+func moveKubectl(file string) {
+	currLocation := file
+	newLocation := "/usr/local/bin/kubectl"
+
+	err := os.Rename(currLocation, newLocation)
+
+	if err != nil {
+		log.Fatal("Failed to move", currLocation, "to", newLocation)
 	}
 }
 
