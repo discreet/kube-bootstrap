@@ -8,10 +8,15 @@ import (
 )
 
 func TestVersion(t *testing.T) {
-	resp := checks.Version("foo", "foo")
+	tresp := checks.Version("foo", "foo")
+	fresp := checks.Version("foo", "bar")
 
-	if resp != true {
+	if tresp != true {
 		t.Error("The values should have matched and returned true")
+	}
+
+	if fresp != false {
+		t.Error("The values should have not matched and returned false")
 	}
 }
 
