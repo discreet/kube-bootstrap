@@ -22,9 +22,15 @@ func TestInstall(t *testing.T) {
 	installer.DownloadURL = ts.URL
 	installer.InstallPath = "/tmp"
 
+	_, err := os.Stat("/tmp/kubectl")
+	if !os.IsNotExist(err) {
+		os.Remove("/tmp/kubectl")
+	}
+
 	if _, err := installer.Install(); err != nil {
 		t.Error(err)
 	}
+	defer os.Remove("/tmp/kubectl")
 
 	info, err := os.Stat("/tmp/kubectl")
 
@@ -33,7 +39,7 @@ func TestInstall(t *testing.T) {
 	}
 
 	if info.Mode() != 0755 {
-		t.Error("Permissions were not assigned correctly")
+		t.Errorf("want permissions 0755, got %v", info.Mode())
 	}
 
 	b, err := ioutil.ReadFile("/tmp/kubectl")
@@ -46,5 +52,4 @@ func TestInstall(t *testing.T) {
 	if strings.Contains(content, "echo 0") != true {
 		t.Error("Content mismatch for file")
 	}
-	defer os.Remove("/tmp/kubectl")
 }
