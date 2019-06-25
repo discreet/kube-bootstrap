@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/discreet/kube-bootstrap/brew"
@@ -35,7 +36,14 @@ func main() {
 
 	if !(checks.App("kubectl")) {
 		log.Println("Installing kubectl", kubectlVersion)
-		if _, err := kubectl.Install(kubectlVersion); err != nil {
+		installer := kubectl.NewInstaller()
+		installer.URLTemplate = fmt.Sprintf(
+			"https://storage.googleapis.com/kubernetes-release/release/%s/bin/darwin/amd4/kubectl",
+			kubectlVersion,
+		)
+		installer.FilePath = "/usr/local/bin"
+
+		if _, err := installer.Install(); err != nil {
 			log.Fatal(err)
 		}
 		log.Println("kubectl", kubectlVersion, "Installed")
@@ -47,7 +55,15 @@ func main() {
 		if checks.Version(currVersion, kubectlVersion) {
 			log.Println("kubectl version", currVersion, "is supported")
 		} else {
-			if _, err := kubectl.Install(kubectlVersion); err != nil {
+			log.Println("Installing kubectl", kubectlVersion)
+			installer := kubectl.NewInstaller()
+			installer.URLTemplate = fmt.Sprintf(
+				"https://storage.googleapis.com/kubernetes-release/release/%s/bin/darwin/amd4/kubectl",
+				kubectlVersion,
+			)
+			installer.FilePath = "/usr/local/bin"
+
+			if _, err := installer.Install(); err != nil {
 				log.Fatal(err)
 			}
 			if checks.Version(currVersion, kubectlVersion) {
@@ -60,7 +76,14 @@ func main() {
 
 	if !(checks.App("helm")) {
 		log.Println("Installing helm", helmVersion)
-		if _, err := helm.Install(helmVersion); err != nil {
+		installer := helm.NewInstaller()
+		installer.URLTemplate = fmt.Sprintf(
+			"https://get.helm.sh/helm-%s-darwin-amd64.tar.gz",
+			helmVersion,
+		)
+		installer.FilePath = "/usr/local/bin"
+
+		if _, err := installer.Install(); err != nil {
 			log.Fatal(err)
 		}
 		log.Println("helm", helmVersion, "installed")
@@ -72,7 +95,14 @@ func main() {
 		if checks.Version(currVersion, helmVersion) {
 			log.Println("helm version", currVersion, "is supported")
 		} else {
-			if _, err := helm.Install(helmVersion); err != nil {
+			installer := helm.NewInstaller()
+			installer.URLTemplate = fmt.Sprintf(
+				"https://get.helm.sh/helm-%s-darwin-amd64.tar.gz",
+				helmVersion,
+			)
+			installer.FilePath = "/usr/local/bin"
+
+			if _, err := installer.Install(); err != nil {
 				log.Fatal(err)
 			}
 			if checks.Version(currVersion, helmVersion) {

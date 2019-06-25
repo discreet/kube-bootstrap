@@ -10,11 +10,17 @@ import (
 	"strings"
 )
 
-func Install(version string) (bool, error) {
-	kubectlURL := fmt.Sprintf(
-		"https://storage.googleapis.com/kubernetes-release/release/%s/bin/darwin/amd4/kubectl",
-		version,
-	)
+type Installer struct {
+	URLTemplate string
+	FilePath    string
+}
+
+func NewInstaller() *Installer {
+	return &Installer{}
+}
+
+func (i *Installer) Install() (bool, error) {
+	kubectlURL := i.URLTemplate
 
 	resp, err := http.DefaultClient.Get(kubectlURL)
 
@@ -23,7 +29,9 @@ func Install(version string) (bool, error) {
 	}
 	defer resp.Body.Close()
 
-	f, err := os.OpenFile("/usr/local/bin/kubectl", os.O_WRONLY|os.O_CREATE, 0755)
+	kubectlPath := fmt.Sprintf("%s/kubectl", i.FilePath)
+
+	f, err := os.OpenFile(kubectlPath, os.O_WRONLY|os.O_CREATE, 0755)
 
 	if err != nil {
 		return false, err

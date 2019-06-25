@@ -13,11 +13,17 @@ import (
 	"strings"
 )
 
-func Install(version string) (bool, error) {
-	helmURL := fmt.Sprintf(
-		"https://get.helm.sh/helm-%s-darwin-amd64.tar.gz",
-		version,
-	)
+type Installer struct {
+	URLTemplate string
+	FilePath    string
+}
+
+func NewInstaller() *Installer {
+	return &Installer{}
+}
+
+func (i *Installer) Install() (bool, error) {
+	helmURL := i.URLTemplate
 
 	resp, err := http.DefaultClient.Get(helmURL)
 
@@ -26,14 +32,14 @@ func Install(version string) (bool, error) {
 	}
 	defer resp.Body.Close()
 
-	ret, err := extractHelm(resp.Body)
+	ret, err := extractHelm(resp.Body, i.FilePath)
 	if err != nil {
 		return false, err
 	}
 	return ret, nil
 }
 
-func extractHelm(archive io.Reader) (bool, error) {
+func extractHelm(archive io.Reader, path string) (bool, error) {
 	archive, err := gzip.NewReader(archive)
 	if err != nil {
 		return false, err
@@ -55,7 +61,9 @@ func extractHelm(archive io.Reader) (bool, error) {
 			continue
 		}
 
-		f, err := os.OpenFile("/usr/local/bin/helm", os.O_RDWR|os.O_CREATE, 0755)
+		helmPath := fmt.Sprintf("%s/helm", path)
+
+		f, err := os.OpenFile(helmPath, os.O_RDWR|os.O_CREATE, 0755)
 		if err != nil {
 			return false, err
 		}
