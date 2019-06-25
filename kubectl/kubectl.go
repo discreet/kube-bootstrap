@@ -23,11 +23,12 @@ func Install(version string) (bool, error) {
 	}
 	defer resp.Body.Close()
 
-	f, err := os.OpenFile("/usr/local/bin/kubectl", os.O_RDWR|os.O_CREATE, 0755)
+	f, err := os.OpenFile("/usr/local/bin/kubectl", os.O_WRONLY|os.O_CREATE, 0755)
 
 	if err != nil {
 		return false, err
 	}
+	defer f.Close()
 
 	if _, err := io.Copy(f, resp.Body); err != nil {
 		return false, err

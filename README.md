@@ -45,4 +45,6 @@ main.go`.
 
 - [ ] Generate `kube.config`
 - [ ] Unit tests
-- [ ] Configure `helm
+- [ ] Configure `helm`
+- [ ] Cobra cli
+- [ ] Homebrew tap
