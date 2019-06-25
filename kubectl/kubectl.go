@@ -11,8 +11,8 @@ import (
 )
 
 type Installer struct {
-	URLTemplate string
-	FilePath    string
+	DownloadURL string
+	InstallPath string
 }
 
 func NewInstaller() *Installer {
@@ -20,7 +20,7 @@ func NewInstaller() *Installer {
 }
 
 func (i *Installer) Install() (bool, error) {
-	kubectlURL := i.URLTemplate
+	kubectlURL := i.DownloadURL
 
 	resp, err := http.DefaultClient.Get(kubectlURL)
 
@@ -29,7 +29,7 @@ func (i *Installer) Install() (bool, error) {
 	}
 	defer resp.Body.Close()
 
-	kubectlPath := fmt.Sprintf("%s/kubectl", i.FilePath)
+	kubectlPath := fmt.Sprintf("%s/kubectl", i.InstallPath)
 
 	f, err := os.OpenFile(kubectlPath, os.O_WRONLY|os.O_CREATE, 0755)
 

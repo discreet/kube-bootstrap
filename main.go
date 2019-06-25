@@ -14,6 +14,7 @@ import (
 func main() {
 	kubectlVersion := "v1.11.6"
 	helmVersion := "v2.10.0"
+	installPath := "/usr/local/bin"
 
 	if !(checks.Env("HTTP_PROXY") && checks.Env("http_proxy")) {
 		log.Fatal("Remember to set your proxy")
@@ -37,11 +38,11 @@ func main() {
 	if !(checks.App("kubectl")) {
 		log.Println("Installing kubectl", kubectlVersion)
 		installer := kubectl.NewInstaller()
-		installer.URLTemplate = fmt.Sprintf(
+		installer.DownloadURL = fmt.Sprintf(
 			"https://storage.googleapis.com/kubernetes-release/release/%s/bin/darwin/amd4/kubectl",
 			kubectlVersion,
 		)
-		installer.FilePath = "/usr/local/bin"
+		installer.InstallPath = installPath
 
 		if _, err := installer.Install(); err != nil {
 			log.Fatal(err)
@@ -57,11 +58,11 @@ func main() {
 		} else {
 			log.Println("Installing kubectl", kubectlVersion)
 			installer := kubectl.NewInstaller()
-			installer.URLTemplate = fmt.Sprintf(
+			installer.DownloadURL = fmt.Sprintf(
 				"https://storage.googleapis.com/kubernetes-release/release/%s/bin/darwin/amd4/kubectl",
 				kubectlVersion,
 			)
-			installer.FilePath = "/usr/local/bin"
+			installer.InstallPath = installPath
 
 			if _, err := installer.Install(); err != nil {
 				log.Fatal(err)
@@ -77,11 +78,11 @@ func main() {
 	if !(checks.App("helm")) {
 		log.Println("Installing helm", helmVersion)
 		installer := helm.NewInstaller()
-		installer.URLTemplate = fmt.Sprintf(
+		installer.DownloadURL = fmt.Sprintf(
 			"https://get.helm.sh/helm-%s-darwin-amd64.tar.gz",
 			helmVersion,
 		)
-		installer.FilePath = "/usr/local/bin"
+		installer.InstallPath = installPath
 
 		if _, err := installer.Install(); err != nil {
 			log.Fatal(err)
@@ -96,11 +97,11 @@ func main() {
 			log.Println("helm version", currVersion, "is supported")
 		} else {
 			installer := helm.NewInstaller()
-			installer.URLTemplate = fmt.Sprintf(
+			installer.DownloadURL = fmt.Sprintf(
 				"https://get.helm.sh/helm-%s-darwin-amd64.tar.gz",
 				helmVersion,
 			)
-			installer.FilePath = "/usr/local/bin"
+			installer.InstallPath = installPath
 
 			if _, err := installer.Install(); err != nil {
 				log.Fatal(err)

@@ -14,8 +14,8 @@ import (
 )
 
 type Installer struct {
-	URLTemplate string
-	FilePath    string
+	DownloadURL string
+	InstallPath string
 }
 
 func NewInstaller() *Installer {
@@ -23,7 +23,7 @@ func NewInstaller() *Installer {
 }
 
 func (i *Installer) Install() (bool, error) {
-	helmURL := i.URLTemplate
+	helmURL := i.DownloadURL
 
 	resp, err := http.DefaultClient.Get(helmURL)
 
@@ -32,7 +32,7 @@ func (i *Installer) Install() (bool, error) {
 	}
 	defer resp.Body.Close()
 
-	ret, err := extractHelm(resp.Body, i.FilePath)
+	ret, err := extractHelm(resp.Body, i.InstallPath)
 	if err != nil {
 		return false, err
 	}
@@ -63,7 +63,7 @@ func extractHelm(archive io.Reader, path string) (bool, error) {
 
 		helmPath := fmt.Sprintf("%s/helm", path)
 
-		f, err := os.OpenFile(helmPath, os.O_RDWR|os.O_CREATE, 0755)
+		f, err := os.OpenFile(helmPath, os.O_WRONLY|os.O_CREATE, 0755)
 		if err != nil {
 			return false, err
 		}
