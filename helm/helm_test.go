@@ -1,6 +1,8 @@
-package kubectl_test
+package helm_test
 
 import (
+	"archive/tar"
+	"compress/gzip"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -9,18 +11,39 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/discreet/kube-bootstrap/kubectl"
+	"github.com/discreet/kube-bootstrap/helm"
 )
 
 func TestInstall(t *testing.T) {
+	s := "echo 0"
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "echo 0")
-	}))
-	defer ts.Close()
+		hdr := tar.Header{
+			Name: "helm-test",
+			Mode: 0644,
+			Size: int64(len(s)),
+		}
 
-	installer := kubectl.NewInstaller()
+		gw := gzip.NewWriter(w)
+		defer gw.Close()
+
+		tw := tar.NewWriter(gw)
+		defer tw.Close()
+
+		if err := tw.WriteHeader(&hdr); err != nil {
+			t.Error(err)
+			return
+		}
+
+		_, err := fmt.Fprint(tw, s)
+		if err != nil {
+			t.Errorf("unexpected error copying zip file in server: %v", err)
+		}
+	}))
+
+	installer := helm.NewInstaller()
 	installer.DownloadURL = ts.URL
-	installer.DownloadPath = "/tmp/kubectl-test"
+	installer.DownloadPath = "/tmp/helm-test"
+	installer.HelmRegex = `^echo\w0$`
 
 	_, err := os.Stat(installer.DownloadPath)
 	if !os.IsNotExist(err) {
@@ -49,7 +72,7 @@ func TestInstall(t *testing.T) {
 
 	content := string(b)
 
-	if strings.Contains(content, "echo 0") != true {
+	if strings.Contains(content, s) != true {
 		t.Error("Content mismatch for file")
 	}
 }
