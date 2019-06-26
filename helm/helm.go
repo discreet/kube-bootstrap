@@ -4,7 +4,6 @@ import (
 	"archive/tar"
 	"bytes"
 	"compress/gzip"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -14,8 +13,9 @@ import (
 )
 
 type Installer struct {
-	DownloadURL string
-	InstallPath string
+	DownloadURL  string
+	DownloadPath string
+	HelmRegex    string
 }
 
 func NewInstaller() *Installer {
@@ -32,20 +32,20 @@ func (i *Installer) Install() (bool, error) {
 	}
 	defer resp.Body.Close()
 
-	ret, err := extractHelm(resp.Body, i.InstallPath)
+	ret, err := extractHelm(resp.Body, i.DownloadPath, i.HelmRegex)
 	if err != nil {
 		return false, err
 	}
 	return ret, nil
 }
 
-func extractHelm(archive io.Reader, path string) (bool, error) {
+func extractHelm(archive io.Reader, helmPath string, helmRegex string) (bool, error) {
 	archive, err := gzip.NewReader(archive)
 	if err != nil {
 		return false, err
 	}
 
-	r := regexp.MustCompile(`^darwin-amd64\/helm$`)
+	r := regexp.MustCompile(helmRegex)
 	tr := tar.NewReader(archive)
 	for {
 		hdr, err := tr.Next()
@@ -60,8 +60,6 @@ func extractHelm(archive io.Reader, path string) (bool, error) {
 		if r.MatchString(hdr.Name) {
 			continue
 		}
-
-		helmPath := fmt.Sprintf("%s/helm", path)
 
 		f, err := os.OpenFile(helmPath, os.O_WRONLY|os.O_CREATE, 0755)
 		if err != nil {

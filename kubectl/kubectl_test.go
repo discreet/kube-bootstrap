@@ -20,19 +20,19 @@ func TestInstall(t *testing.T) {
 
 	installer := kubectl.NewInstaller()
 	installer.DownloadURL = ts.URL
-	installer.InstallPath = "/tmp"
+	installer.DownloadPath = "/tmp/kubectl-test"
 
-	_, err := os.Stat("/tmp/kubectl")
+	_, err := os.Stat(installer.DownloadPath)
 	if !os.IsNotExist(err) {
-		os.Remove("/tmp/kubectl")
+		os.Remove(installer.DownloadPath)
 	}
 
 	if _, err := installer.Install(); err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
-	defer os.Remove("/tmp/kubectl")
+	defer os.Remove(installer.DownloadPath)
 
-	info, err := os.Stat("/tmp/kubectl")
+	info, err := os.Stat(installer.DownloadPath)
 
 	if err != nil {
 		t.Fatal(err)
@@ -42,7 +42,7 @@ func TestInstall(t *testing.T) {
 		t.Errorf("want permissions 0755, got %v", info.Mode())
 	}
 
-	b, err := ioutil.ReadFile("/tmp/kubectl")
+	b, err := ioutil.ReadFile(installer.DownloadPath)
 	if err != nil {
 		t.Fatal(err)
 	}

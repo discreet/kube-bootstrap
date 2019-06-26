@@ -13,8 +13,10 @@ import (
 
 func main() {
 	kubectlVersion := "v1.11.6"
+	kubectlPath := "/usr/local/bin/kubectl"
 	helmVersion := "v2.10.0"
-	installPath := "/usr/local/bin"
+	helmPath := "/usr/local/bin/helm"
+	helmRegex := `^darwin-amd64\/helm$`
 
 	if !(checks.Env("HTTP_PROXY") && checks.Env("http_proxy")) {
 		log.Fatal("Remember to set your proxy")
@@ -42,7 +44,7 @@ func main() {
 			"https://storage.googleapis.com/kubernetes-release/release/%s/bin/darwin/amd4/kubectl",
 			kubectlVersion,
 		)
-		installer.InstallPath = installPath
+		installer.DownloadPath = kubectlPath
 
 		if _, err := installer.Install(); err != nil {
 			log.Fatal(err)
@@ -62,7 +64,7 @@ func main() {
 				"https://storage.googleapis.com/kubernetes-release/release/%s/bin/darwin/amd4/kubectl",
 				kubectlVersion,
 			)
-			installer.InstallPath = installPath
+			installer.DownloadPath = kubectlPath
 
 			if _, err := installer.Install(); err != nil {
 				log.Fatal(err)
@@ -82,7 +84,8 @@ func main() {
 			"https://get.helm.sh/helm-%s-darwin-amd64.tar.gz",
 			helmVersion,
 		)
-		installer.InstallPath = installPath
+		installer.DownloadPath = helmPath
+		installer.HelmRegex = helmRegex
 
 		if _, err := installer.Install(); err != nil {
 			log.Fatal(err)
@@ -101,7 +104,8 @@ func main() {
 				"https://get.helm.sh/helm-%s-darwin-amd64.tar.gz",
 				helmVersion,
 			)
-			installer.InstallPath = installPath
+			installer.DownloadPath = helmPath
+			installer.HelmRegex = helmRegex
 
 			if _, err := installer.Install(); err != nil {
 				log.Fatal(err)

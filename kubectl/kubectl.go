@@ -2,7 +2,6 @@ package kubectl
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -11,8 +10,8 @@ import (
 )
 
 type Installer struct {
-	DownloadURL string
-	InstallPath string
+	DownloadURL  string
+	DownloadPath string
 }
 
 func NewInstaller() *Installer {
@@ -29,9 +28,7 @@ func (i *Installer) Install() (bool, error) {
 	}
 	defer resp.Body.Close()
 
-	kubectlPath := fmt.Sprintf("%s/kubectl", i.InstallPath)
-
-	f, err := os.OpenFile(kubectlPath, os.O_WRONLY|os.O_CREATE, 0755)
+	f, err := os.OpenFile(i.DownloadPath, os.O_WRONLY|os.O_CREATE, 0755)
 
 	if err != nil {
 		return false, err
