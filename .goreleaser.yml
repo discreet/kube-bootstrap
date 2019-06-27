@@ -36,6 +36,16 @@ release:
     draft: false
     prerelease: false
     disable: false
+brew:
+  name: kube-bootstrap
+  github:
+    owner: discreet
+    name: homebrew-kube-bootstrap
+  description: Bootstrap your laptop for Kubernetes
+  install: |
+    bin.install "kube-bootstrap"
+  test: |
+    system "#{bin}/kube-bootstrap --version"
 github_urls:
     api: https://github.com/api/v3/
     upload: https://github.com/api/uploads/
