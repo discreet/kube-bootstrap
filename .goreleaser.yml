@@ -6,20 +6,43 @@ before:
     - go mod download
     # you may remove this if you don't need go generate
     - go generate ./...
+project_name: kube-bootstrap
 builds:
-- env:
-  - CGO_ENABLED=0
-archives:
-- replacements:
-    darwin: Darwin
-    amd64: x86_64
+  - main: main.go
+    binary: kube-bootstrap
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+    goarch:
+      - amd64
+archive:
+  format: tar.gz
+  name_template: '{{ .Binary }}-v{{ .Version }}-{{ .Os }}-{{ .Arch }}'
+  files:
+    - LICENSE
+    - CHANGELOG.md
+    - README.md
 checksum:
-  name_template: 'checksums.txt'
+    name_template: '{{ .ProjectName }}_v{{ .Version }}_checksums.txt'
+sign:
+  artifacts: checksum
 snapshot:
-  name_template: "{{ .Tag }}-next"
+    name_template: SNAPSHOT-{{ .Commit }}
+release:
+  github:
+    owner: discreet
+    name: kube-bootstrap
+    draft: false
+    prerelease: false
+    disable: false
+github_urls:
+    api: https://github.com/api/v3/
+    upload: https://github.com/api/uploads/
+    download: https://github.com/
 changelog:
+  skip: false
   sort: asc
   filters:
     exclude:
-    - '^docs:'
-    - '^test:'
+      - '^docs'
