@@ -33,9 +33,6 @@ release:
   github:
     owner: discreet
     name: kube-bootstrap
-    draft: false
-    prerelease: false
-    disable: false
 brew:
   name: kube-bootstrap
   github:
